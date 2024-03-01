@@ -1,6 +1,10 @@
 package bytebrewers.bitpod.controller;
 
 
+import bytebrewers.bitpod.entity.Bank;
+import bytebrewers.bitpod.repository.BankRepository;
+import bytebrewers.bitpod.utils.dto.ControllerResponse;
+import bytebrewers.bitpod.utils.dto.request.bank.BankDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.MethodOrderer;
@@ -14,18 +18,20 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.MockMvcBuilder.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles("test")
 @Transactional // we can use this to ensure it doesn't really insert it on database
@@ -37,6 +43,8 @@ public class BankControllerTest {
     private static String id;
     private static String address;
     private static String token;
+    private BankRepository bankRepository;
+
 
     @Order(1)
     @Test
@@ -51,30 +59,31 @@ public class BankControllerTest {
                 ).andExpectAll(status().isAccepted())
                 .andDo(result -> {
                     String jsonString = result.getResponse().getContentAsString();
-                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>(){});
+                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>() {
+                    });
 
                     token = mapResponse.get("data").toString();
                     assertNotNull(token);
                 });
     }
 
-
     @Order(2)
     @Test
     public void testCreateBank() throws Exception {
         Map<String, Object> req = new HashMap<>();
-        req.put("name", "Mandiri");
+        req.put("name", "BNI");
         req.put("address", "Jl. Jendral Sudirman No. 1");
 
         mockMvc.perform(post("/api/banks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
                         .header("Authorization", "Bearer " + token)
-                .content(objectMapper.writeValueAsString(req))
-        ).andExpectAll(status().isCreated())
+                        .content(objectMapper.writeValueAsString(req))
+                ).andExpectAll(status().isCreated())
                 .andDo(result -> {
                     String jsonString = result.getResponse().getContentAsString();
-                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>(){});
+                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>() {
+                    });
 
                     Map<String, Object> data = (Map<String, Object>) mapResponse.get("data");
                     assertEquals(req.get("name"), data.get("name"));
@@ -82,6 +91,46 @@ public class BankControllerTest {
 
                     id = data.get("id").toString();
                     address = data.get("address").toString();
+                });
+
+    }
+
+    @Order(3)
+    @Test
+    public void testShowBank() throws Exception {
+        String id = "1";
+        mockMvc.perform(get("/api/banks/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                ).andExpectAll(status().isOk())
+                .andDo(result -> {
+                    String jsonString = result.getResponse().getContentAsString();
+                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>() {
+                    });
+                    Map<String, Object> data = (Map<String, Object>) mapResponse.get("data");
+                    assertEquals(id, data.get("id"));
+                });
+    }
+
+    @Order(4)
+    @Test
+    public void testUpdateBank() throws Exception {
+        String id = "1";
+        Map<String, Object> req = new HashMap<>();
+        req.put("address", "Jl. Jendral Sudirman No. 2");
+        mockMvc.perform(put("/api/banks/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", "Bearer " + token)
+                        .content(objectMapper.writeValueAsString(req))
+                ).andExpectAll(status().isOk())
+                .andDo(result -> {
+                    String jsonString = result.getResponse().getContentAsString();
+                    Map<String, Object> mapResponse = objectMapper.readValue(jsonString, new TypeReference<>() {
+                    });
+                    Map<String, Object> data = (Map<String, Object>) mapResponse.get("data");
+                    assertEquals(req.get("address"), data.get("address"));
                 });
     }
 

@@ -1,12 +1,13 @@
 package bytebrewers.bitpod.utils.dto.request.user;
 
-import java.math.BigDecimal;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class TopUpDTO {
-    private BigDecimal amount;
+public class TopUpSnapDTO {
+
+    private String userId;
+    private Integer gross_amount;
+
 }
