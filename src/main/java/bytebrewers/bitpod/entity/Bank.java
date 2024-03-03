@@ -14,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@ToString
 public class Bank extends Auditable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
