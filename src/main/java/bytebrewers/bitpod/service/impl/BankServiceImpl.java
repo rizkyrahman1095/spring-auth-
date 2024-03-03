@@ -32,6 +32,10 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public Bank create(BankDTO bankDTO) {
+        Optional<Bank> bank = bankRepository.findByName(bankDTO.getName().toLowerCase());
+        if (bank.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bank already exists");
+        }
         return bankRepository.save(bankDTO.toEntity());
     }
 

@@ -24,4 +24,8 @@ public class Bank extends Auditable{
     @OneToMany(mappedBy = "bank")
     @JsonIgnore
     private List<Transaction> transactions = new ArrayList<>();
+
+    public Bank(String mandiri, String s) {
+        super();
+    }
 }
